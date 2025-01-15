@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -12,14 +13,13 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export function LoginForm({
-  className,
-  ...props
-}: React.ComponentPropsWithoutRef<"div">) {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
+export function LoginForm({ className, ...props }: { className?: string }) {
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
+
+  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,16 +28,16 @@ export function LoginForm({
 
     try {
       const response = await axios.post("http://127.0.0.1:8000/login/", {
-        username: username,
-        password: password,
+        username,
+        password,
       });
 
       if (response.status === 200) {
         setMessage("Login successful!");
-        localStorage.setItem("user_id", response.data.user_id); // Save user_id locally
+        localStorage.setItem("user_id", response.data.user_id);
+        navigate("/dashboard");
       }
     } catch (error: any) {
-      // Handle errors
       if (error.response && error.response.status === 401) {
         setError("Invalid username or password");
       } else if (error.response && error.response.status === 404) {
@@ -71,9 +71,7 @@ export function LoginForm({
                 />
               </div>
               <div className="grid gap-2">
-                <div className="flex items-center">
-                  <Label htmlFor="password">Password</Label>
-                </div>
+                <Label htmlFor="password">Password</Label>
                 <Input
                   id="password"
                   type="password"
@@ -94,4 +92,3 @@ export function LoginForm({
     </div>
   );
 }
-
