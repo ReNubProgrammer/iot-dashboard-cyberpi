@@ -1,17 +1,19 @@
+"use client";
+
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useRouter } from "next/navigation"; // Next.js navigation hook
 import axios from "axios";
-import { cn } from "../lib/utils";
-import { Button } from "./ui/button";
+import { cn } from "@/lib/utils"; // Update path based on your project structure
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "./ui/card";
-import { Input } from "./ui/input";
-import { Label } from "./ui/label";
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function LoginForm({ className, ...props }: { className?: string }) {
   const [username, setUsername] = useState<string>("");
@@ -19,7 +21,7 @@ export function LoginForm({ className, ...props }: { className?: string }) {
   const [error, setError] = useState<string>("");
   const [message, setMessage] = useState<string>("");
 
-  const navigate = useNavigate();
+  const router = useRouter(); // Next.js router for navigation
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,7 +37,7 @@ export function LoginForm({ className, ...props }: { className?: string }) {
       if (response.status === 200) {
         setMessage("Login successful!");
         localStorage.setItem("user_id", response.data.user_id);
-        navigate("/dashboard");
+        router.push("/dashboard"); // Navigate to the dashboard page
       }
     } catch (error: any) {
       if (error.response && error.response.status === 401) {
@@ -92,3 +94,5 @@ export function LoginForm({ className, ...props }: { className?: string }) {
     </div>
   );
 }
+
+export default LoginForm;

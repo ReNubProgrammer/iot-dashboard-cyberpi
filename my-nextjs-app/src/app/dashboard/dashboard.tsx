@@ -1,3 +1,5 @@
+"use client"; // This marks the file as a Client Component
+
 import * as React from "react";
 import {
   ColumnDef,
@@ -13,8 +15,8 @@ import {
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
 
-import { Button } from "./ui/button";
-import { Checkbox } from "./ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -23,8 +25,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
-import { Input } from "./ui/input";
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -32,7 +34,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "./ui/table";
+} from "@/components/ui/table";
 
 const data: Payment[] = [
   {
