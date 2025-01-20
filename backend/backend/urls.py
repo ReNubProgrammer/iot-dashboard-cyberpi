@@ -16,11 +16,14 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from api.views import LoginView, UsersView, RegisterView
+from api.views import LoginView, UsersView, RegisterView, RegisterCyberpiView, ListCyberpisView, DeleteCyberpiView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', LoginView.as_view(), name='login'),
     path('users/', UsersView.as_view(), name='users'),
     path('register/', RegisterView.as_view(), name='register'),
+    path('register_cyberpi/', RegisterCyberpiView.as_view(), name='register-cyberpi'),
+    path('cyberpis/', ListCyberpisView.as_view(), name='list-cyberpis'),
+    path('delete_cyberpi/<int:id>/', DeleteCyberpiView.as_view(), name='delete_cyberpi'),
 ]

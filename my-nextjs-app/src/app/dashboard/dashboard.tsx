@@ -1,6 +1,7 @@
-"use client"; // This marks the file as a Client Component
+"use client";
 
-import * as React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -36,47 +37,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const data: Payment[] = [
-  {
-    id: "m5gr84i9",
-    amount: 316,
-    status: "success",
-    email: "ken99@yahoo.com",
-  },
-  {
-    id: "3u1reuv4",
-    amount: 242,
-    status: "success",
-    email: "Abe45@gmail.com",
-  },
-  {
-    id: "derv1ws0",
-    amount: 837,
-    status: "processing",
-    email: "Monserrat44@gmail.com",
-  },
-  {
-    id: "5kma53ae",
-    amount: 874,
-    status: "success",
-    email: "Silas22@gmail.com",
-  },
-  {
-    id: "bhqecj4p",
-    amount: 721,
-    status: "failed",
-    email: "carmella@hotmail.com",
-  },
-];
+import { useRouter } from "next/navigation";
 
-export type Payment = {
+// Define the type for Cyberpi data
+export type Device = {
   id: string;
-  amount: number;
-  status: "pending" | "processing" | "success" | "failed";
-  email: string;
+  ip_address: string;
+  registered_by: string;
+  status: "online" | "offline";
 };
 
-export const columns: ColumnDef<Payment>[] = [
+// Define the columns for the table
+export const columns: ColumnDef<Device>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -100,47 +72,40 @@ export const columns: ColumnDef<Payment>[] = [
     enableHiding: false,
   },
   {
-    accessorKey: "status",
-    header: "Status",
+    accessorKey: "id",
+    header: "Cyberpi ID",
+    cell: ({ row }) => <div>{row.getValue("id")}</div>,
+  },
+  {
+    accessorKey: "ip_address",
+    header: "IP Address",
+    cell: ({ row }) => <div>{row.getValue("ip_address")}</div>,
+  },
+  {
+    accessorKey: "registered_by",
+    header: "Registered By",
     cell: ({ row }) => (
-      <div className="capitalize">{row.getValue("status")}</div>
+      <div className="lowercase">{row.getValue("registered_by")}</div>
     ),
   },
   {
-    accessorKey: "email",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
-          Email
-          <ArrowUpDown />
-        </Button>
-      );
-    },
-    cell: ({ row }) => <div className="lowercase">{row.getValue("email")}</div>,
-  },
-  {
-    accessorKey: "amount",
-    header: () => <div className="text-right">Amount</div>,
-    cell: ({ row }) => {
-      const amount = parseFloat(row.getValue("amount"));
-
-      // Format the amount as a dollar amount
-      const formatted = new Intl.NumberFormat("en-US", {
-        style: "currency",
-        currency: "USD",
-      }).format(amount);
-
-      return <div className="text-right font-medium">{formatted}</div>;
-    },
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => (
+      <div
+        className={`capitalize ${
+          row.getValue("status") === "online" ? "text-green-500" : "text-red-500"
+        }`}
+      >
+        {row.getValue("status")}
+      </div>
+    ),
   },
   {
     id: "actions",
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
+      const device = row.original;
 
       return (
         <DropdownMenu>
@@ -153,13 +118,15 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(device.ip_address)}
             >
-              Copy payment ID
+              Copy Device IP Address
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>Manage Device</DropdownMenuItem>
+            <DropdownMenuItem className="text-red-500 hover:text-red-700 focus:bg-red-100">
+              Delete Device
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -168,6 +135,7 @@ export const columns: ColumnDef<Payment>[] = [
 ];
 
 const Dashboard: React.FC = () => {
+  const [data, setData] = useState<Device[]>([]); // State to hold Cyberpi data
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -175,10 +143,73 @@ const Dashboard: React.FC = () => {
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const router = useRouter();
+
+  // Fetch data from the backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get("http://127.0.0.1:8000/cyberpis/");
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching Cyberpis:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Function to delete a device
+  const deleteDevice = async (id: string) => {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/delete_cyberpi/${id}/`);
+      setData((prevData) => prevData.filter((device) => device.id !== id)); // Update the state after deletion
+      alert("Device deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting device:", error);
+      alert("Failed to delete device. Please try again.");
+    }
+  };
 
   const table = useReactTable({
     data,
-    columns,
+    columns: columns.map((column) => {
+      if (column.id === "actions") {
+        return {
+          ...column,
+          cell: ({ row }: { row: any }) => {
+            const device = row.original;
+            return (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                  <DropdownMenuItem
+                    onClick={() => navigator.clipboard.writeText(device.ip_address)}
+                  >
+                    Copy Device IP Address
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>Manage Device</DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="text-red-500 hover:text-red-700 focus:bg-red-100"
+                    onClick={() => deleteDevice(device.id)}
+                  >
+                    Delete Device
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          },
+        };
+      }
+      return column;
+    }),
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -196,19 +227,19 @@ const Dashboard: React.FC = () => {
   });
 
   return (
-    <div className="w-full">
-      <div className="flex items-center py-4">
+    <div className="w-full max-w-5xl mx-auto p-4 bg-gray-50 rounded-md">
+      <div className="flex items-center py-4 space-x-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn("email")?.getFilterValue() as string) ?? ""}
+          placeholder="Filter by registered user..."
+          value={(table.getColumn("registered_by")?.getFilterValue() as string) ?? ""}
           onChange={(event) =>
-            table.getColumn("email")?.setFilterValue(event.target.value)
+            table.getColumn("registered_by")?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
+            <Button variant="outline">
               Columns <ChevronDown />
             </Button>
           </DropdownMenuTrigger>
@@ -232,6 +263,16 @@ const Dashboard: React.FC = () => {
               })}
           </DropdownMenuContent>
         </DropdownMenu>
+        <Button
+          variant="outline"
+          size="sm"
+          className="ml-auto"
+          onClick={() => {
+            router.push("/register_cyberpi");
+          }}
+        >
+          Register New CyberPi
+        </Button>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -282,30 +323,6 @@ const Dashboard: React.FC = () => {
             )}
           </TableBody>
         </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
-        </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
       </div>
     </div>
   );

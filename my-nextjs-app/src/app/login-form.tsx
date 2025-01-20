@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation"; // Next.js navigation hook
+import { useRouter } from "next/navigation";
 import axios from "axios";
-import { cn } from "@/lib/utils"; // Update path based on your project structure
+import { cn } from "@/lib/utils"; 
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -48,7 +48,7 @@ export function LoginForm({ className, ...props }: { className?: string }) {
           setIsRegisterMode(false); // Switch back to login mode after successful registration
         } else {
           setMessage("Login successful!");
-          localStorage.setItem("user_id", response.data.user_id);
+          localStorage.setItem("username", username);
           router.push("/dashboard"); // Navigate to the dashboard page
         }
       } else {

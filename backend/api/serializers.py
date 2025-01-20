@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Cyberpi
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -24,3 +24,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             password=validated_data['password']
         )
+
+class CyberpiSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cyberpi
+        fields = ['id', 'ip_address', 'registered_by', 'status']
+        read_only_fields = ['registered_by']
