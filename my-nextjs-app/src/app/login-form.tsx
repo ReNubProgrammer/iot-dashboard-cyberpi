@@ -25,31 +25,41 @@ export function LoginForm({ className, ...props }: { className?: string }) {
 
   const router = useRouter();
 
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setMessage("");
-  
+
     const url = isRegisterMode
       ? "http://127.0.0.1:8000/register/"
       : "http://127.0.0.1:8000/login/";
-  
+
     try {
       const response = await axios.post(url, {
         username,
         password,
       });
 
-      console.log(response);
-      
       if (response.status === 200) {
+        const { role } = response.data; // Extract role from response
+
         if (isRegisterMode) {
           setMessage("Registration successful! You can now log in.");
           setIsRegisterMode(false); // Switch back to login mode after successful registration
         } else {
           setMessage("Login successful!");
           localStorage.setItem("username", username);
-          router.push("/dashboard"); // Navigate to the dashboard page
+          localStorage.setItem("role", role); // Store the role in localStorage if needed for later
+          // Route based on role
+          if (role === "admin") {
+            router.push("/admin"); // Navigate to admin page
+          } else if (role === "user") {
+            router.push("/dashboard"); // Navigate to dashboard
+          } else {
+            setError("Unknown role. Please contact support.");
+          }
         }
       } else {
         setError("Unexpected response from the server.");
@@ -70,6 +80,9 @@ export function LoginForm({ className, ...props }: { className?: string }) {
       }
     }
   };
+
+
+
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>

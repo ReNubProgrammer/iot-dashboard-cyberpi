@@ -28,7 +28,7 @@ export type Device = {
   id: string;
   ip_address: string;
   registered_by: string;
-  status: "online" | "offline";
+  status: string;
 };
 
 const Dashboard: React.FC = () => {
@@ -152,7 +152,13 @@ const Dashboard: React.FC = () => {
                         Copy Device IP Address
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>Manage Device</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          localStorage.setItem("device_ip", device.ip_address);
+                          router.push("/manage");
+                        }}
+                      >
+                        Manage Device</DropdownMenuItem>
                       <DropdownMenuItem
                         className="text-red-500 hover:text-red-700 focus:bg-red-100"
                         onClick={() => deleteDevice(device.id)}

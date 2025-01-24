@@ -20,7 +20,7 @@ class LoginView(APIView):
             user = User.objects.get(username=username)
             # Validate password
             if password == user.password:
-                return Response({"message": "Login successful", "user_id": user.id}, status=200)
+                return Response({"message": "Login successful", "user_id": user.id, "role": user.role}, status=200)
             else:
                 return Response({"error": "Invalid credentials"}, status=401)
         except User.DoesNotExist:
