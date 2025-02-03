@@ -43,13 +43,14 @@ export function LoginForm({ className, ...props }: { className?: string }) {
       });
 
       if (response.status === 200) {
-        const { role } = response.data; // Extract role from response
+        const { user_id, role } = response.data; // Extract role from response
 
         if (isRegisterMode) {
           setMessage("Registration successful! You can now log in.");
           setIsRegisterMode(false); // Switch back to login mode after successful registration
         } else {
           setMessage("Login successful!");
+          localStorage.setItem("user_id", user_id);
           localStorage.setItem("username", username);
           localStorage.setItem("role", role); // Store the role in localStorage if needed for later
           // Route based on role

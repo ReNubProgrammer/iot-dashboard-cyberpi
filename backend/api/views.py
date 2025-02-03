@@ -5,6 +5,7 @@ from rest_framework import status, permissions
 from django.contrib.auth.hashers import make_password, check_password
 from .models import User, Cyberpi
 from .serializers import UserSerializer, RegisterSerializer, CyberpiSerializer
+from django.shortcuts import get_object_or_404
 
 
 # Login View
@@ -18,9 +19,14 @@ class LoginView(APIView):
         try:
             # Check if the user exists
             user = User.objects.get(username=username)
+            
             # Validate password
-            if password == user.password:
-                return Response({"message": "Login successful", "user_id": user.id, "role": user.role}, status=200)
+            if password == user.password:  # You should be hashing passwords
+                return Response({
+                    "message": "Login successful",
+                    "user_id": str(user.id),  # ✅ Return UUID, not username
+                    "role": user.role
+                }, status=200)
             else:
                 return Response({"error": "Invalid credentials"}, status=401)
         except User.DoesNotExist:
@@ -44,21 +50,31 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class RegisterCyberpiView(APIView):
-
     def post(self, request):
-        ip_address = request.data.get('ip_address')
-        registered_by = request.data.get('registered_by') 
+        ip_address = request.data.get("ip_address")
+        user_id = request.data.get("registered_by")  # Get user ID from request (UUID)
 
-        if not ip_address or not registered_by:
-            return Response({"error": "IP Address and Registered By are required."}, status=status.HTTP_400_BAD_REQUEST)
+        if not user_id:
+            return Response({"error": "registered_by (user_id) field is required"}, status=400)
 
-        cyberpi = Cyberpi.objects.create(
-            ip_address=ip_address,
-            registered_by=registered_by,  
-            status="offline"
-        )
-        return Response({"message": "Cyberpi registered successfully."}, status=status.HTTP_201_CREATED)
-    
+        try:
+            # Fetch the user by UUID
+            user = User.objects.get(id=user_id)
+
+            # Create CyberPi record with the correct user reference
+            cyberpi = Cyberpi.objects.create(
+                ip_address=ip_address,
+                registered_by=user,  # Store UUID reference
+            )
+
+            # Increment number of Cyberpis registered by the user
+            user.number_cyberpi += 1
+            user.save()
+
+            return Response({"message": "CyberPi registered successfully!"}, status=status.HTTP_201_CREATED)
+
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class ListCyberpisView(APIView):
 

@@ -70,7 +70,7 @@ export function Postman() {
 
     } else if (selectedMethod === "post") {
       const jsonData = JSON.parse(textData); 
-      const response = await axios.post(`http://${deviceIp}`, jsonData);
+      await axios.post(`http://${deviceIp}`, jsonData);
       toast.success("POST Request Successfully Sent!", {
         duration: 4000,
       });

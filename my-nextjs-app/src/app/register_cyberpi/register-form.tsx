@@ -39,25 +39,36 @@ export function Register_form() {
       return;
     }
 
+    const userId = localStorage.getItem("user_id"); // Store UUID, not username
+    if (!userId) {
+      setError("User ID not found. Please log in again.");
+      return;
+    }
+
     try {
-      const currentUsername = localStorage.getItem("username");
-      console.log("Current username:", currentUsername);
-      // Send POST request to register the CyberPi
-      const response = await axios.post("http://127.0.0.1:8000/register_cyberpi/", {
-        ip_address: ipAddress,
-        registered_by:currentUsername,
+      const response = await fetch("http://127.0.0.1:8000/register_cyberpi/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ip_address: ipAddress, // ✅ FIXED: Ensure correct field name
+          registered_by: userId, // ✅ Send UUID to backend
+        }),
       });
 
-      if (response.status === 201) {
+      const data = await response.json(); // ✅ Properly parse JSON response
+
+      if (response.ok) {
         setMessage("CyberPi registered successfully!");
         setIpAddress(""); // Clear the input field
         router.push("/dashboard"); // Navigate to the dashboard
       } else {
-        setError("Failed to register CyberPi. Please try again.");
+        setError(data.error || "Failed to register CyberPi. Please try again.");
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error registering CyberPi:", error);
-      setError(error.response?.data?.message || "An error occurred. Please try again.");
+      setError("An error occurred. Please try again.");
     }
   };
 

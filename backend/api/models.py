@@ -1,6 +1,9 @@
 from django.db import models
+from django.contrib.auth import get_user_model
+import uuid
 
 # Create your models here.
+User = get_user_model()
 
 # Custom Manager
 class CustomUserManager(models.Manager):
@@ -14,10 +17,11 @@ class CustomUserManager(models.Manager):
     
 
 class User(models.Model):
-    id = models.AutoField(primary_key=True)  # Auto-incrementing ID
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)  # Auto-incrementing ID
     username = models.CharField(max_length=150, unique=True)  # Unique username
     password = models.CharField(max_length=128)  # Store hashed password
-    role = models.CharField(max_length=50, choices=[("admin", "Admin"), ("user", "User")])
+    role = models.CharField(max_length=50, choices=[("admin", "Admin"), ("user", "User")], default="user")
+    number_cyberpi = models.IntegerField(default=0)
 
     objects = CustomUserManager()  # Use the custom manager
 
@@ -35,7 +39,7 @@ class CyberpiManager(models.Manager):
         cyberpi = self.model(
             ip_address=ip_address,
             registered_by=registered_by,
-            online=online,
+            status=online,
         )
         cyberpi.save(using=self._db)
         return cyberpi
@@ -44,13 +48,11 @@ class Cyberpi(models.Model):
     id = models.AutoField(primary_key=True)
     ip_address = models.CharField(max_length=150, unique=True)
     registered_by = models.ForeignKey(
-        User,
+        User,  # Reference to the User model
         on_delete=models.CASCADE,
-        related_name="cyberpis",  # Enables reverse lookups
+        related_name="cyberpis",
     )
-    online = models.CharField(max_length=150, default="offline")
-
-    objects = CyberpiManager()
+    status = models.CharField(max_length=150, default="offline")
 
     class Meta:
         db_table = 'cyberpis'
@@ -59,15 +61,3 @@ class Cyberpi(models.Model):
         return self.ip_address
     
 
-
-class Cyberpi(models.Model):
-    id = models.AutoField(primary_key=True)  
-    ip_address = models.CharField(max_length=150, unique=True)
-    registered_by = models.CharField(max_length=150)
-    status = models.CharField(max_length=150, default="offline")
-
-    class Meta:
-        db_table = 'cyberpis'
-
-    def __str__(self):
-        return self.ip_address
