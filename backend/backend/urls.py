@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from api.views import LoginView, UsersView, RegisterView, RegisterCyberpiView, ListCyberpisView, DeleteCyberpiView
+from api.views import LoginView, UsersView, RegisterView, RegisterCyberpiView, ListCyberpisView, DeleteCyberpiView, DeleteUserView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +26,5 @@ urlpatterns = [
     path('register_cyberpi/', RegisterCyberpiView.as_view(), name='register-cyberpi'),
     path('cyberpis/', ListCyberpisView.as_view(), name='list-cyberpis'),
     path('delete_cyberpi/<int:id>/', DeleteCyberpiView.as_view(), name='delete_cyberpi'),
+    path('users/<uuid:user_id>/delete/', DeleteUserView.as_view(), name='delete_user'),
 ]
